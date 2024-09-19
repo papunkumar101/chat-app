@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 // Connection pool 
 const db = mysql.createPool({
@@ -8,15 +8,17 @@ const db = mysql.createPool({
     database : 'chatApp'
 });
 
-// Check the connection
-db.getConnection((err, connection) => {
-    if (err) {
+
+// Connect and check the connection with promise
+(async () => {
+    try {
+         const connection = await db.getConnection();
+         console.log('Connected to MySQL!'); 
+         connection.release();
+    } catch (err) {
         console.error('Error connecting to MySQL:', err.message);
-        return;
     }
-    console.log('Connected to MySQL!');
-    connection.release();
-})
+})();
 
 module.exports = db;
 // import it and using db.query("....") you can access the database

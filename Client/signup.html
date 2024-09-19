@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In</title>
+    <title>Sign Up</title>
     <style>
         body {
     font-family: Arial, sans-serif;
@@ -70,6 +70,11 @@ button:hover {
             
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
+
+            <label for="normal" style="display: inline;">Normal</label>
+            <input type="radio" id="normal" name="type" value="1" style="display: inline;width: auto;">
+            <label for="group"  style="display: inline;">Group</label>
+            <input type="radio" id="group" name="type" value="2" style="display: inline;width: auto;"><br>
             
             <button type="submit">Register</button>
         </form>
@@ -83,15 +88,17 @@ document.getElementById('signup-form').addEventListener('submit', function(event
     event.preventDefault();  
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
+    const type = document.querySelector('input[name="type"]:checked').value;
     const messageBox = document.getElementById('message');
     messageBox.textContent = ''; 
-    if (username === '' || password === '') {
-        document.getElementById('message').textContent = 'Both fields are required.';
+    if (username === '' || password === '' || type === '') {
+        document.getElementById('message').textContent = 'All fields are required.';
         return;
     } 
     const data = {
         username: username,
-        password: password
+        password: password,
+        type: type
     }; 
     fetch('/signup', {
         method: 'POST',
