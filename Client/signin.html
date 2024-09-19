@@ -53,9 +53,12 @@ button:hover {
 }
 
 #message {
-    color: red;
+    color: #45a049;
 }
-
+.footer{
+    position: absolute;
+    bottom: 70px;
+}
     </style>
 </head>
 <body>
@@ -66,40 +69,31 @@ button:hover {
             <input type="text" id="username" name="username" required>
             
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            
+            <input type="password" id="password" name="password" required> 
+
             <button type="submit">Login</button>
         </form>
         <p id="message"></p>
     </div>
-    <script>
-        document.getElementById('signin-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
+    <div class="footer"><a href="/">Back to Dasboard</a></div>
 
-    // Get values from form fields
+
+    <script>
+document.getElementById('signin-form').addEventListener('submit', function(event) {
+    event.preventDefault();  
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-
-    // Basic validation
+    const messageBox = document.getElementById('message');
+    messageBox.textContent = ''; 
     if (username === '' || password === '') {
-        document.getElementById('message').textContent = 'Both fields are required.';
+        document.getElementById('message').textContent = 'All fields are required.';
         return;
-    }
-
-    // Clear any previous messages
-    document.getElementById('message').textContent = '';
-
-    // Prepare data for sending
+    } 
     const data = {
         username: username,
         password: password
-    };
-
-    // Log data to console (for demonstration purposes)
-    console.log('Form Data:', data);
-
-    // Example of sending data (you'd replace this with your actual submission code)
-    fetch('/submit-signin', {
+    }; 
+    fetch('/signin', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -108,12 +102,17 @@ button:hover {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Success:', data);
-        // Optionally handle response here
-    })
+        console.log('data',data);
+        if(data.code == 200){
+             document.cookie = `authToken=${data.data.token}; path=/; max-age=${60 * 60 * 24}; secure; SameSite=Strict`;
+            window.location.href = '/profile';
+        }else{
+            messageBox.textContent = data.error ?? data.message;
+        }
+    }) 
     .catch(error => {
-        console.error('Error:', error);
-        // Optionally handle error here
+        messageBox.textContent = data.error ?? data.message;
+        console.error('Error:', error); 
     });
 });
 
