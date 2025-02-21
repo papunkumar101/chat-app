@@ -1,3 +1,6 @@
+const UserController = require("./app.controller");
+
+
 const jwt = require('jsonwebtoken');
 const secretKey = "thisIsmySecretKey";
 
@@ -10,5 +13,6 @@ async function VerifyToken(token) {
     if(decoded) return decoded;
     return false;  
 }
+
  
 module.exports = {generateToken, VerifyToken};

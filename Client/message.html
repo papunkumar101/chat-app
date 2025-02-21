@@ -19,39 +19,68 @@
   <body>
     <ul id="messages"></ul>
     <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+      <input id="input" autocomplete="off" /><button type="submit" onclick="SendMessage(event)">Send</button>
     </form>
-
+    <!-- <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script> -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io(); 
-        const messageSendTo = document.location.search; 
-        const searchparamObj = new URLSearchParams(messageSendTo); 
-        const authToken = getCookie('authToken');
-        const data = JSON.stringify({ senderToken: authToken, receiverName:searchparamObj.get('to') });
-        socket.emit('auth', data); 
+    const socket = io("http://localhost:3000");
+    let username;
+    document.addEventListener("DOMContentLoaded", function() {
+        joinChat()
+    });
+        
+
+// join to chat 
+function joinChat() {
+    const messageSendTo = document.location.search; 
+    if (!messageSendTo) return alert("Invalide username");
+    const searchparamObj = new URLSearchParams(messageSendTo);
+    
+    let message = {
+        type : "connection",
+        receiver : searchparamObj.get('to')
+    }
+    socket.emit("message", JSON.stringify(message));
+    // document.getElementById("chat-box").style.display = "block";
+}
 
 
-        // socket.on("receive message", (authData) => {
-        //   console.log('auth data', authData);
-        // });
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
+// send messages 
+function SendMessage(e) {
+    e.preventDefault();
+    const messageSendTo = document.location.search; 
+    if (!messageSendTo) return alert("Invalide username");
+    const searchparamObj = new URLSearchParams(messageSendTo);
+    
+    const form = document.getElementById('form');
+    let inputTxt = document.getElementById("input").value;
+    if (!inputTxt) return;
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (input.value) { 
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
-        });
-
-        function getCookie(name) {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop().split(';').shift();
-      }
+    let message = {
+        type : "send_message",
+        receiver : searchparamObj.get('to'),
+        message : inputTxt,
+    } 
+    socket.emit("message", JSON.stringify(message));
+    inputTxt = ''; 
+}
  
+
+// listen the connection, success, error & messages 
+socket.on("receive_message", (data) => {
+    console.log('receive_message', data);
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.innerHTML += `<p><strong>${data.sender}:</strong> ${data.message}</p>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+socket.on("connected", (data) => {
+    alert(`Welcome, ${data.username}! You are now connected.`);
+});
+socket.on("error", (err) => {
+    console.error("error:", err);
+    alert(`Error : ${err}`);
+});
     </script>
     </body>
 </html>
