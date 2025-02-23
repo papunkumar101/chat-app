@@ -7,7 +7,7 @@ class MongoDB {
 
     async connect() {
         try {
-            await mongoose.connect(this.URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+            await mongoose.connect(this.URL);
             console.log('== Mongo connected ==');
         } catch (err) {
             console.error(err);

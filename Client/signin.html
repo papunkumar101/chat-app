@@ -105,7 +105,7 @@ document.getElementById('signin-form').addEventListener('submit', function(event
         console.log('data',data);
         if(data.code == 200){
              document.cookie = `authToken=${data.data.token}; path=/; max-age=${60 * 60 * 24}; secure; SameSite=Strict`;
-            window.location.href = '/profile';
+            window.location.href = '/message';
         }else{
             messageBox.textContent = data.error ?? data.message;
         }

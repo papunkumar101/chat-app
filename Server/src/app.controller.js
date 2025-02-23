@@ -18,7 +18,7 @@ class userController{
                 'u_id' : response.u_id,
                 'type' : response.user_type,
                 'token' : jwtToken
-             } 
+             }
              return res.json({code : 200, message:'success', data:data, error:null});
         } catch (error) {
              res.json({code : 400, message: 'failed', data: null, error: error});
@@ -40,34 +40,37 @@ class userController{
         }
     }
 
-    async profile(req, res){
+    async message(req, res){
         try {
             const token = req.cookies.authToken;
             const verify = await VerifyToken(req.cookies.authToken);
             const {username,u_id,user_type,current_date_time} = verify.userData;
             let [member] = await UserModel.memberList();
-            let [group] = await UserModel.groupList();
-            let memberList = ``;
-            member.map((val)=>{
-                if(val.u_id != u_id) memberList +=`<li>${val?.username?.toUpperCase()} <a href="/message?to=${val?.username}">Send message to ${val?.username}</a></li>`;
-            });
-            let groupList = ``;
-            group.map((val)=>{
-                if(val.u_id != u_id) groupList +=`<li>${val?.username?.toUpperCase()} <a href="/message?to=${val?.username}">Send message to ${val?.username}</a></li>`;
-            });
-             return res.send(`
-                   <p>Hii ${username.toUpperCase()}, </p><p style="float:right"><a href="/logout">Logout</a></p>
-                  <h1>Select the group or name to start charting : </h1><br>
-                  <h3>Member : </h3>
-                  <ol>${memberList}</ol>
-                  <h3>Group : </h3>
-                  <ol>${groupList}</ol>
-                `);
+            let [group] = await UserModel.groupList(); 
+            let data  = {
+                username : username,
+                u_id : u_id,
+                user_type : user_type,
+                current_date_time : current_date_time,
+                member : member,
+                group : group
+            };
+
+            return res.json({code:200, message : 'success', data, error : null});  
         } catch (error) {
             return res.json({code:400, message : 'failed', data: null, error : error});
         }
     }
 
+
+
+    profile(req, res){
+        try { 
+            return true;
+        } catch (error) {
+            return res.json({code:400, message : 'failed', data: null, error : error});
+        }
+    }
 
 
     logout(req, res){
@@ -123,9 +126,8 @@ class userController{
 
         onCloseHandler = (socket) => {
             try {
-                console.log(`User disconnected: ${socket.id}`); 
-                // socket.broadcast.emit("user_disconnected", { userId: socket.id }); 
-                // UserController.handleUserDisconnection(socket);
+                console.log(`User disconnected: ${socket.id}`);
+                handleUserDisconnection(socket, socket.id);
             } catch (error) {
                 console.error("Error handling disconnection:", error);
             }
@@ -133,12 +135,13 @@ class userController{
 }
 
 
-let connectedUsers = {};
 // socket handle functions 
+let connectedUsers = {};
+let onlineOfflineStatusOfUsers = {};
 async function userConnection(socket, parsedMessage) { 
     try {
         let userData = await getConnectedUserDetails(socket);
-
+        if(!userData.userData.username || !parsedMessage.receiver) socket.emit("error", { message: "Sender or receiver is invalid" });
         const response = {
             message: "Successfully connected!",
             username : userData.userData.username,
@@ -146,35 +149,49 @@ async function userConnection(socket, parsedMessage) {
             userType: userData.userData.user_type
         };
         connectedUsers[userData.userData.username] = socket.id;
-        console.log("User connected:", userData.userData.username);
+        onlineOfflineStatusOfUsers[userData.userData.username] = 1;
+        collectAndSendLastConversession(socket, userData.userData.username, parsedMessage.receiver);
         socket.emit("connected", response);
-
-        return true;
+        console.log("Connected users:", connectedUsers);
     } catch (error) {
         console.error("Error in userConnection:", error);
         socket.emit("error", { message: "Server error, please try again later." });
         socket.disconnect();
     }
 }
+
+// Collect the chats between sender and receiver in (merge  DESC   time wise)
+async function collectAndSendLastConversession(socket, username, receiver) {
+    let chats = await UserModel.collectChat(username, receiver); 
+    socket.emit("user_online_offline_status", onlineOfflineStatusOfUsers);
+    if(chats){
+        socket.emit("last_conversation", chats);
+        // socket.to(connectedUsers[userData.userData.username]).emit("last_conversation", chats);
+    }
+    return true;
+}
+
+
 async function sendMessage(socket, parsedMessage) {
     let userData = await getConnectedUserDetails(socket);
     if(!userData) return socket.emit("error", { message: "Server error, please try again later." });
     let receiver = parsedMessage.receiver;
+    if(!receiver) return socket.emit("error", { message: "Server error, receiver not found." });
     let data = {
         sender : userData.userData.username,
         receiver,
         message : parsedMessage.message
     }
-
+    await UserModel.saveMessage(data);
     // socket.broadcast.emit("user_disconnected", { userId: socket.id });
     // socket.emit("receive_message", data);
     // io.to(groupId).emit("new_message", { senderId, message });
     // io.to(receiverSocketId).emit("new_message", { senderId, message });
-    if(!receiver) return socket.emit("error", { message: "Server error, receiver not found." });
     socket.to(connectedUsers[receiver]).emit("receive_message", data);
-    console.log('sendMessage', data);
     return true;
 }
+
+
 
 async function getConnectedUserDetails(socket){
     const cookies = socket.handshake.headers.cookie || "";
@@ -193,6 +210,14 @@ async function getConnectedUserDetails(socket){
         }
 
         return verify;
+}
+
+
+
+function handleUserDisconnection(socket, id){
+    let username = Object.entries(connectedUsers).find(([key, value]) => value === id)?.[0]; 
+    onlineOfflineStatusOfUsers[username] = 0;
+    return socket.broadcast.emit("user_online_offline_status", onlineOfflineStatusOfUsers); 
 }
 
 module.exports = new userController();
