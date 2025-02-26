@@ -9,7 +9,7 @@ class userController{
              if(!username || username =='' || !password || password =='') return res.json({code : 400, message:'failed', data:null, error:'Incorrect input'});
              // password decrypt
              let result = await UserModel.checkUserCred(username, password);
-             if(!result) return res.json({code : 400, message: 'failed', data: null, error : "User not exist"});
+             if(!result) return res.json({code : 400, message: 'failed', data: null, error : "Invalide creds or User not exist"});
              // Return the jwt token
              const [[response]] = await UserModel.getUserData(username);
              const jwtToken = await generateToken(response);

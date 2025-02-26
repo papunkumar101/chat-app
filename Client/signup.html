@@ -98,7 +98,7 @@
         </form>
         <p id="message"></p>
     </div>
-    <div class="footer">Powered by Papun &copy; <script>document.write(new Date().getFullYear());</script> | <a href="/">Back to Dashboard</a></div>
+    <div class="footer">Powered by Papun &copy; <script>document.write(new Date().getFullYear());</script> | <a href="/">Back to home</a></div>
 
     <script>
         document.getElementById('signup-form').addEventListener('submit', function(event) {
@@ -120,8 +120,15 @@
             })
             .then(response => response.json())
             .then(data => {
-                messageBox.textContent = data.data ?? data.error;
-                console.log('Success:', data); 
+                let resp = data.data ?? data.error;
+                messageBox.textContent = resp;
+                if(resp == 'Successfully created') {
+                    messageBox.style.color = '#1da851';
+                    setTimeout(()=> {
+                        document.location.href = '/signin';
+                    },1000);
+                }
+                if(resp == 'User already exist') messageBox.style.color = '#d9534f';
             })
             .catch(error => {
                 messageBox.textContent = 'An error occurred. Please try again later.';

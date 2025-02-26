@@ -159,18 +159,33 @@
             }
         }
         .logout {
-            background: #d9534f;
+            background: #373b3e;
             border: none;
             padding: 5px 10px;
             color: white;
             border-radius: 5px;
             cursor: pointer;
         }
+::-webkit-scrollbar {
+  width: 3px;
+} 
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey; 
+  border-radius: 10px;
+} 
+::-webkit-scrollbar-thumb {
+  background: #000; 
+  border-radius: 10px;
+} 
+::-webkit-scrollbar-thumb:hover {
+  background: #000; 
+}
     </style>
 </head>
 <body> 
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <div id="sidebar">
+        Hello <span id="username"> </span><br><hr>
         <h3>Members</h3>
         <ul id="member-list"></ul>
         <h3>Groups</h3>
@@ -178,8 +193,8 @@
     </div>
     <div id="chat-container">
         <div id="chat-header">
-            <span id="username"> </span>
-            <a href="/logout" class="logout">Logout</a>
+            <span id="receiverUsername"></span>
+            <a href="/logout" class="logout" title="Logout"><i class="fa fa-sign-out"></i></a>
         </div>
         <ul id="messages"></ul>
         <form id="form" action="">
@@ -191,6 +206,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script>
         const socket = io("http://localhost:3000"); 
         let SENDER, RECEIVER; // Sender is username(me)
@@ -214,7 +230,7 @@
                 document.querySelectorAll('#member-list li').forEach(elem => {
                     let userName = elem.querySelector('a').textContent.trim();
                     if (userName === username.toUpperCase()) {
-                        let statusText = status === 1 ? 'Active' : 'Offline';
+                        let statusText = status === 1 ? '(Active)' : '(Offline)';
                         let statusColor = status === 1 ? 'green' : 'red';
                         let existingStatus = elem.querySelector('small');
                         if (existingStatus) existingStatus.remove(); 
@@ -240,6 +256,7 @@
 
         function joinChat(to) {
             RECEIVER = to;
+            document.getElementById("receiverUsername").innerText = capitalizeFirstLetter(to);
             if (!RECEIVER) return alert("Invalid username");  
             let message = {
                 type: "connection",
@@ -298,7 +315,7 @@
                 $("#group-list").html("");
                  if(data.code == 200){
                     SENDER = data.data.username;
-                    document.querySelector('#username').innerText = SENDER.toUpperCase();
+                    document.querySelector('#username').innerText = capitalizeFirstLetter(SENDER);
                     data.data.member.forEach(member => {
                         if (member.username !== SENDER) {
                             $("#member-list").append(`<li><a href="javascript:void(0)" id ="user${member.username}" onclick="joinChat('${member.username}')">${member.username.toUpperCase()}</a></li>`);
