@@ -1,57 +1,323 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Socket.IO chat</title>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
-
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #e5ddd5;
+        }
+        
+        #sidebar {
+            width: 30%;
+            background: #075e54;
+            border-right: 1px solid #ddd;
+            padding: 1rem;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            color: white;
+        }
+        
+        #sidebar h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #128c7e;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #sidebar ul li {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        #sidebar ul li:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        #sidebar ul li a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            display: block;
+        }
+        
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-left: 30%;
+            position: relative;
+        }
+        
+        #chat-header {
+            background: #075e54;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 70%;
+            padding: 0.5rem 1rem;
+            margin: 5px;
+            border-radius: 12px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .sender { background: #dcf8c6; align-self: flex-end; }
+        .receiver { background: #ffffff; align-self: flex-start; }
+        .timestamp { font-size: 10px; color: #666; text-align: right; }
+        
+        #form {
+            background: #f0f0f0;
+            padding: 0.5rem;
+            display: flex;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #input {
+            flex-grow: 1;
+            border: none;
+            padding: 0.5rem;
+            outline: none;
+            border-radius: 20px;
+            padding-left: 15px;
+        }
+        #form > button {
+            background: #128c7e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            margin-left: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        a { text-decoration: none; color: #25d366; }
+        
+        .menu-btn {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            background: #128c7e;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                transform: translateX(-100%);
+                width: 80%;
+            }
+            .menu-btn { display: block; }
+            #chat-container { margin-left: 0; width: 100%; }
+            .show-sidebar { transform: translateX(0); }
+            #chat-header {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 10px;
+            }
+        }
+        .logout {
+            background: #d9534f;
+            border: none;
+            padding: 5px 10px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+</head>
+<body> 
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div id="sidebar">
+        <h3>Members</h3>
+        <ul id="member-list"></ul>
+        <h3>Groups</h3>
+        <ul id="group-list"></ul>
+    </div>
+    <div id="chat-container">
+        <div id="chat-header">
+            <span id="username"> </span>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" placeholder="Type a message...">
+            <button type="submit" onclick="SendMessage(event)">Send</button>
+        </form>
+    </div> 
+    
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        const socket = io(); 
-        const messageSendTo = document.location.search; 
-        const searchparamObj = new URLSearchParams(messageSendTo); 
-        const authToken = getCookie('authToken');
-        const data = JSON.stringify({ senderToken: authToken, receiverName:searchparamObj.get('to') });
-        socket.emit('auth', data); 
+        const socket = io("http://localhost:3000"); 
+        let SENDER, RECEIVER; // Sender is username(me)
 
-
-        // socket.on("receive message", (authData) => {
-        //   console.log('auth data', authData);
-        // });
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (input.value) { 
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
+        // Sockets for Listing --- start
+        socket.on("receive_message", (data) => {
+            appendMessage(data.sender, data.message, new Date(), false);
+        }); 
+        socket.on("last_conversation", (messages) => {
+            document.getElementById("messages").innerHTML = '';
+            console.log("Last Conversation:", messages);
+            messages.reverse().forEach(msg => {
+                let isSender = msg.sender_id === SENDER;
+                appendMessage(msg.sender_id, msg.message_text, new Date(msg.createdAt), isSender);
+            });
+        }); 
+        socket.on("user_online_offline_status", (messages) => {
+            console.log('user_online_offline_status', messages); 
+            Object.entries(messages).forEach(([username, status]) => {
+                if (username === "undefined") return; 
+                document.querySelectorAll('#member-list li').forEach(elem => {
+                    let userName = elem.querySelector('a').textContent.trim();
+                    if (userName === username.toUpperCase()) {
+                        let statusText = status === 1 ? 'Active' : 'Offline';
+                        let statusColor = status === 1 ? 'green' : 'red';
+                        let existingStatus = elem.querySelector('small');
+                        if (existingStatus) existingStatus.remove(); 
+                        elem.innerHTML += `<small style="margin-left: 10px; color: ${statusColor};">
+                            ${statusText}
+                        </small>`;
+                    }
+                });
+            });
         });
 
-        function getCookie(name) {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop().split(';').shift();
-      }
- 
+
+        socket.on("connected", (data) => {
+            SENDER = data.username;
+        }); 
+        socket.on("error", (err) => {
+            console.error("error:", err);
+            alert(`Error : ${err}`);
+        });
+       // Sockets for Listing --- end
+
+
+
+        function joinChat(to) {
+            RECEIVER = to;
+            if (!RECEIVER) return alert("Invalid username");  
+            let message = {
+                type: "connection",
+                receiver: RECEIVER
+            };
+            socket.emit("message", JSON.stringify(message));
+            socket.emit("last_conversation", { RECEIVER });
+        }
+
+        function SendMessage(e) {
+            e.preventDefault();
+            if (!RECEIVER) return alert("Invalid username");
+
+            let inputTxt = document.getElementById("input").value;
+            if (!inputTxt) return;
+
+            let message = {
+                type: "send_message",
+                receiver: RECEIVER,
+                message: inputTxt,
+            };
+            socket.emit("message", JSON.stringify(message)); 
+            appendMessage("You", inputTxt, new Date(), true); 
+            document.getElementById("input").value = "";
+        }
+
+
+        function appendMessage(sender, message, timestamp, isSender) {
+            const messagesDiv = document.getElementById("messages");
+            const messageDiv = document.createElement("div");
+
+            messageDiv.classList.add("message", isSender ? "sender" : "receiver");
+
+            messageDiv.innerHTML = `${message} 
+                <span class="timestamp">${formatTime(timestamp)}</span>`;
+            // If group then enable it 
+            // messageDiv.innerHTML = `<strong>${capitalizeFirstLetter(sender)}:</strong> ${message} 
+            //     <span class="timestamp">${formatTime(timestamp)}</span>`;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function formatTime(date) {
+            const d = new Date(date);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function capitalizeFirstLetter(val) {
+                return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+            } 
+
+
+        $(document).ready(function() {
+            $.post("/message", function(data) {
+                $("#member-list").html("");
+                $("#group-list").html("");
+                 if(data.code == 200){
+                    SENDER = data.data.username;
+                    document.querySelector('#username').innerText = SENDER.toUpperCase();
+                    data.data.member.forEach(member => {
+                        if (member.username !== SENDER) {
+                            $("#member-list").append(`<li><a href="javascript:void(0)" id ="user${member.username}" onclick="joinChat('${member.username}')">${member.username.toUpperCase()}</a></li>`);
+                        }
+                    });
+                    
+                    data.data.group.forEach(group => {
+                        $("#group-list").append(`<li><a href="javascript:void(0)" onclick="joinChat('${group.username}')">${group.username.toUpperCase()}</a></li>`);
+                    });
+                }
+            });
+        }); 
     </script>
-    </body>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("show-sidebar");
+        } 
+    </script>
+    
+</body>
 </html>

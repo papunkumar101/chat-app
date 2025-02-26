@@ -3,67 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Sign Up - ChatApp</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
         body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f0f0f0;
-    margin: 0;
-}
-
-.container {
-    background: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    margin-bottom: 20px;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-input {
-    width: 90%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#message {
-    color: #45a049;
-}
-.footer{
-    position: absolute;
-    bottom: 70px;
-}
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #075e54;
+        }
+        label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-signup {
+            background-color: #25d366;
+            color: white;
+        }
+        .btn-signup:hover {
+            background-color: #1da851;
+        }
+        #message {
+            color: #d9534f;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sign In</h1>
+        <h1>Sign Up</h1>
         <form id="signup-form">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
@@ -73,51 +91,43 @@ button:hover {
 
             <label for="normal" style="display: inline;">Normal</label>
             <input type="radio" id="normal" name="type" value="1" style="display: inline;width: auto;">
-            <label for="group"  style="display: inline;">Group</label>
+            <label for="group" style="display: inline;">Group</label>
             <input type="radio" id="group" name="type" value="2" style="display: inline;width: auto;"><br>
             
-            <button type="submit">Register</button>
+            <button type="submit" class="btn btn-signup">Register</button>
         </form>
         <p id="message"></p>
     </div>
-    <div class="footer"><a href="/">Back to Dasboard</a></div>
-
+    <div class="footer">Powered by Papun &copy; <script>document.write(new Date().getFullYear());</script> | <a href="/">Back to Dashboard</a></div>
 
     <script>
-document.getElementById('signup-form').addEventListener('submit', function(event) {
-    event.preventDefault();  
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const type = document.querySelector('input[name="type"]:checked').value;
-    const messageBox = document.getElementById('message');
-    messageBox.textContent = ''; 
-    if (username === '' || password === '' || type === '') {
-        document.getElementById('message').textContent = 'All fields are required.';
-        return;
-    } 
-    const data = {
-        username: username,
-        password: password,
-        type: type
-    }; 
-    fetch('/signup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        messageBox.textContent = data.code == 200? data.data ?? data.message : data.error;
-        console.log('Success:', data); 
-    })
-    .catch(error => {
-        messageBox.textContent = data.error ?? data.message;
-        console.error('Error:', error); 
-    });
-});
-
+        document.getElementById('signup-form').addEventListener('submit', function(event) {
+            event.preventDefault();  
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const type = document.querySelector('input[name="type"]:checked')?.value;
+            let messageBox = document.getElementById('message');
+            messageBox.textContent = ''; 
+            if (!username || !password || !type) {
+                messageBox.textContent = 'All fields are required.';
+                return;
+            } 
+            const data = { username, password, type }; 
+            fetch('/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageBox.textContent = data.data ?? data.error;
+                console.log('Success:', data); 
+            })
+            .catch(error => {
+                messageBox.textContent = 'An error occurred. Please try again later.';
+                console.error('Error:', error); 
+            });
+        });
     </script>
 </body>
 </html>
