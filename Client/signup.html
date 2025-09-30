@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - ChatApp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         * {
             margin: 0;
@@ -77,23 +78,54 @@
             font-size: 14px;
             color: #777;
         }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted black;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0; 
+            position: absolute;
+            z-index: 1;
+        }
+
+        .tooltip:hover .tooltiptext {
+           visibility: visible;
+        }
+        .min-width-set{
+            min-width: 400px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container min-width-set">
         <h1>Sign Up</h1>
         <form id="signup-form">
-            <label for="username">Username:</label>
+            <label for="username">Username <div class="tooltip"><i class="fa fa-info-circle"></i>
+                <span class="tooltiptext">username should not be special char or any space</span>
+              </div> :</label>
             <input type="text" id="username" name="username" required>
+
+            <label for="email">Email <div class="tooltip"><i class="fa fa-info-circle"></i>
+                <span class="tooltiptext">verification link will send to your given mail ID</span>
+              </div> :</label>
+            <input type="email" id="email" name="email" required>
             
-            <label for="password">Password:</label>
+            <label for="password">Password :</label>
             <input type="password" id="password" name="password" required>
 
-            <label for="normal" style="display: inline;">Normal</label>
-            <input type="radio" id="normal" name="type" value="1" style="display: inline;width: auto;">
-            <label for="group" style="display: inline;">Group</label>
-            <input type="radio" id="group" name="type" value="2" style="display: inline;width: auto;"><br>
-            
+            <label for="cpassword">Confirm Password :</label>
+            <input type="cpassword" id="cpassword" name="cpassword" required>
+
+             
             <button type="submit" class="btn btn-signup">Register</button>
         </form>
         <p id="message"></p>
@@ -105,14 +137,28 @@
             event.preventDefault();  
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const type = document.querySelector('input[name="type"]:checked')?.value;
+            const cpassword = document.getElementById('cpassword').value;
+            const email = document.getElementById('email').value;
             let messageBox = document.getElementById('message');
             messageBox.textContent = ''; 
-            if (!username || !password || !type) {
-                messageBox.textContent = 'All fields are required.';
+
+            if (!username || !password || !cpassword || !email) {
+                messageBox.textContent = ('All fields are required.');
                 return;
-            } 
-            const data = { username, password, type }; 
+            }
+
+            const usernameRegex = /^[a-zA-Z0-9]+$/;
+            if (!usernameRegex.test(username)) {
+                messageBox.textContent = ('Username should not contain spaces or special characters.');
+                return;
+            }
+
+            if (password !== cpassword) {
+                messageBox.textContent = ('Passwords do not match.');
+                return;
+            }
+             
+            const data = { username, password, cpassword, email }; 
             fetch('/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -136,7 +136,7 @@
             display: none;
             position: fixed;
             top: 10px;
-            left: 10px;
+            right: 10px;
             z-index: 1100;
             background: #128c7e;
             border: none;
@@ -151,13 +151,27 @@
             }
             .menu-btn { display: block; }
             #chat-container { margin-left: 0; width: 100%; }
-            .show-sidebar { transform: translateX(0); }
-            #chat-header {
-                flex-direction: row;
-                justify-content: space-between;
-                padding: 10px;
+            #sidebar.show-sidebar {
+                transform: translateX(0); 
+            }
+            .logout {
+                background: #0606067d !important;
+                border: none;
+                padding: 10px 15px;
+                color: white;
+                border-radius: 5px;
+                cursor: pointer;
+                position: absolute;
+                bottom: 10px;
+                width: 100%;
+                display: block;
             }
         }
+        
+        .logout-container {
+            margin-top: auto;
+        }
+
         .logout {
             background: #373b3e;
             border: none;
@@ -166,20 +180,31 @@
             border-radius: 5px;
             cursor: pointer;
         }
-::-webkit-scrollbar {
-  width: 3px;
-} 
-::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 5px grey; 
-  border-radius: 10px;
-} 
-::-webkit-scrollbar-thumb {
-  background: #000; 
-  border-radius: 10px;
-} 
-::-webkit-scrollbar-thumb:hover {
-  background: #000; 
-}
+
+        ::-webkit-scrollbar {
+          width: 3px;
+        } 
+        ::-webkit-scrollbar-track {
+          box-shadow: inset 0 0 5px grey; 
+          border-radius: 10px;
+        } 
+        ::-webkit-scrollbar-thumb {
+          background: #000; 
+          border-radius: 10px;
+        } 
+        ::-webkit-scrollbar-thumb:hover {
+          background: #000; 
+        }
+
+        @media (min-width: 769px) {
+            #sidebar .logout {
+                display: none;
+                background: #373b3e;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+            }
+        }
     </style>
 </head>
 <body> 
@@ -190,6 +215,9 @@
         <ul id="member-list"></ul>
         <h3>Groups</h3>
         <ul id="group-list"></ul>
+        <div class="logout-container">
+            <a href="/logout" class="logout" title="Logout"><i class="fa fa-sign-out"></i> Logout</a>
+        </div>
     </div>
     <div id="chat-container">
         <div id="chat-header">
@@ -264,6 +292,7 @@
             };
             socket.emit("message", JSON.stringify(message));
             socket.emit("last_conversation", { RECEIVER });
+            closeSidebar();
         }
 
         function SendMessage(e) {
@@ -333,7 +362,12 @@
         function toggleSidebar() {
             const sidebar = document.getElementById("sidebar");
             sidebar.classList.toggle("show-sidebar");
-        } 
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.remove("show-sidebar");
+        }
     </script>
     
 </body>

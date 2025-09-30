@@ -1,0 +1,11 @@
+Day one
+1) register with : email(otp verification - gmail smtp), password, conf-pass, username(check dublicate), Full name
+2) Mobile responsive
+
+user account -
+3) Add the input field to add user(by username). if user exist send frind request if accept show in both the user dashboard
+4) Add alert notification functionality
+
+group create - 
+show to list of user - sent initation - accept? - group chat
+admin can remove the user
